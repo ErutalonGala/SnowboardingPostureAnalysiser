@@ -9,6 +9,7 @@ import streamlit as st
 from PIL import Image
 
 from snowcoach.pose_engine import PoseEngine
+from snowcoach.tempfiles import remove_temp_file
 
 
 st.set_page_config(page_title="SnowCoach", page_icon="🏂", layout="wide")
@@ -73,6 +74,7 @@ elif source == "视频":
     if upload and st.button("开始分析", type="primary"):
         progress, preview, status = st.progress(0), st.empty(), st.empty()
         input_path = output_path = None
+        capture = writer = engine = None
         try:
             suffix = Path(upload.name).suffix or ".mp4"
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as source_file:
@@ -99,14 +101,22 @@ elif source == "视频":
                 progress.progress(min(index / total, 1.0))
                 status.caption(f"已分析 {index} / {total} 帧")
             capture.release(); writer.release(); engine.close()
+            capture = writer = engine = None
             if last_result:
                 show_result(last_result)
             with open(output_path, "rb") as video_file:
                 st.download_button("下载带骨架视频", video_file.read(), "snowcoach-analysis.mp4", "video/mp4")
         finally:
+            # Release every native handle even when frame processing fails.
+            if capture is not None:
+                capture.release()
+            if writer is not None:
+                writer.release()
+            if engine is not None:
+                engine.close()
             for path in (input_path, output_path):
-                if path:
-                    Path(path).unlink(missing_ok=True)
+                if path and not remove_temp_file(path):
+                    st.warning(f"临时文件暂时被其他进程占用，将由系统稍后清理：{Path(path).name}")
     elif not upload:
         st.info("上传 MP4、MOV 或 AVI 视频；短视频可更快获得反馈。")
 
