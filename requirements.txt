@@ -1,5 +1,6 @@
 streamlit>=1.32,<2
-mediapipe>=0.10.14,<0.11
+# 0.10.22+ no longer exposes the legacy ``solutions`` API used by PoseEngine.
+mediapipe>=0.10.14,<0.10.22
 opencv-python-headless>=4.9,<5
 numpy>=1.24,<3
 Pillow>=10,<12

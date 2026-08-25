@@ -26,6 +26,17 @@ streamlit run app.py
 
 浏览器打开终端提示的地址（通常为 <http://localhost:8501>）。上传侧面或略偏正面的全身素材，确保头、双手、双脚均在画面内。
 
+### MediaPipe 兼容性
+
+本项目使用 MediaPipe 的 Solutions Pose API，因此依赖文件将 MediaPipe 限制在兼容版本。如果启动时看到
+`module 'mediapipe' has no attribute 'solutions'`，通常是环境中已经安装了移除该 API 的新版本。请在已激活的虚拟环境中强制重装项目依赖：
+
+```bash
+python -m pip install --upgrade --force-reinstall -r requirements.txt
+```
+
+可用 `python -m pip show mediapipe` 确认实际加载的版本；同时请检查启动 Streamlit 与安装依赖时使用的是同一个 Python 环境。
+
 ## 测试
 
 ```bash
