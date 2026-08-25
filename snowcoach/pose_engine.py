@@ -10,15 +10,25 @@ from .analyzer import Landmark, PostureAnalyzer
 
 class PoseEngine:
     def __init__(self, detection_confidence: float = 0.55, tracking_confidence: float = 0.55):
-        self._pose = mp.solutions.pose.Pose(
+        solutions = getattr(mp, "solutions", None)
+        if solutions is None:
+            version = getattr(mp, "__version__", "unknown")
+            raise RuntimeError(
+                "This application requires MediaPipe's legacy Solutions API, but "
+                f"the installed mediapipe {version} package does not provide it. "
+                "Reinstall the compatible dependencies with "
+                "`python -m pip install --upgrade --force-reinstall -r requirements.txt`."
+            )
+
+        self._pose = solutions.pose.Pose(
             static_image_mode=False,
             model_complexity=1,
             smooth_landmarks=True,
             min_detection_confidence=detection_confidence,
             min_tracking_confidence=tracking_confidence,
         )
-        self._draw = mp.solutions.drawing_utils
-        self._pose_module = mp.solutions.pose
+        self._draw = solutions.drawing_utils
+        self._pose_module = solutions.pose
         self.analyzer = PostureAnalyzer()
 
     def process(self, bgr_frame, level: str = "基础滑行"):
