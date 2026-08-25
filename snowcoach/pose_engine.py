@@ -2,24 +2,41 @@
 
 from __future__ import annotations
 
+import importlib
+
 import cv2
 import mediapipe as mp
 
 from .analyzer import Landmark, PostureAnalyzer
 
 
+def _load_solutions():
+    """Return the legacy Solutions package across MediaPipe layouts.
+
+    Some MediaPipe wheels no longer re-export ``solutions`` from the package
+    root even though the implementation is still installed.  Prefer the public
+    attribute, then try its long-standing internal module path before reporting
+    an incompatible installation.
+    """
+    solutions = getattr(mp, "solutions", None)
+    if solutions is not None:
+        return solutions
+
+    try:
+        return importlib.import_module("mediapipe.python.solutions")
+    except (ImportError, ModuleNotFoundError) as exc:
+        version = getattr(mp, "__version__", "unknown")
+        raise RuntimeError(
+            "This application requires MediaPipe's legacy Solutions API, but "
+            f"the installed mediapipe {version} package does not provide it. "
+            "Install the version pinned by this project with "
+            "`python -m pip install --upgrade --force-reinstall -r requirements.txt`."
+        ) from exc
+
+
 class PoseEngine:
     def __init__(self, detection_confidence: float = 0.55, tracking_confidence: float = 0.55):
-        solutions = getattr(mp, "solutions", None)
-        if solutions is None:
-            version = getattr(mp, "__version__", "unknown")
-            raise RuntimeError(
-                "This application requires MediaPipe's legacy Solutions API, but "
-                f"the installed mediapipe {version} package does not provide it. "
-                "Reinstall the compatible dependencies with "
-                "`python -m pip install --upgrade --force-reinstall -r requirements.txt`."
-            )
-
+        solutions = _load_solutions()
         self._pose = solutions.pose.Pose(
             static_image_mode=False,
             model_complexity=1,

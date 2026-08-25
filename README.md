@@ -28,14 +28,17 @@ streamlit run app.py
 
 ### MediaPipe 兼容性
 
-本项目使用 MediaPipe 的 Solutions Pose API，因此依赖文件将 MediaPipe 限制在兼容版本。如果启动时看到
-`module 'mediapipe' has no attribute 'solutions'`，通常是环境中已经安装了移除该 API 的新版本。请在已激活的虚拟环境中强制重装项目依赖：
+本项目使用 MediaPipe 的 Solutions Pose API，因此依赖文件固定使用兼容的 0.10.21 版本。部分新版安装包只是
+不再从顶层导出 `solutions`，应用会自动尝试兼容导入；如果安装包已彻底移除该 API，则需要在已激活的虚拟环境中强制重装项目依赖：
 
 ```bash
 python -m pip install --upgrade --force-reinstall -r requirements.txt
 ```
 
 可用 `python -m pip show mediapipe` 确认实际加载的版本；同时请检查启动 Streamlit 与安装依赖时使用的是同一个 Python 环境。
+在 Windows 上建议使用同一个解释器完成安装和启动，例如依次执行
+`py -3.11 -m pip install --upgrade --force-reinstall -r requirements.txt` 和
+`py -3.11 -m streamlit run app.py`，避免 `pip` 与 `streamlit` 指向不同的虚拟环境。
 
 ## 测试
 
